@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Minhphu0304/slack-reaction-bot/handler"
 	"github.com/gin-gonic/gin"
 	_ "github.com/heroku/x/hmetrics/onload"
 )
@@ -18,11 +19,9 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Logger())
 
-	router.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "success",
-		})
-	})
+	router.GET("/", handler.HandleRootRequest)
+
+	router.POST("/reaction-bot", handler.ReactionBot)
 
 	router.Run(":" + port)
 }
