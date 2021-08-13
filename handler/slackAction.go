@@ -14,9 +14,10 @@ type SlackEventType struct {
 }
 
 type SlackActionBody struct {
-	Token     string `json:"token"`
-	Challenge string `json:"challenge,omitempty"`
-	Type      string `json:"type"`
+	Token     string          `json:"token" binding:"required"`
+	Challenge string          `json:"challenge,omitempty"`
+	Type      string          `json:"type" binding:"required"`
+	Event     *SlackEventType `json:"event,omitempty"`
 }
 
 func ReactionBot(c *gin.Context) {
@@ -26,9 +27,13 @@ func ReactionBot(c *gin.Context) {
 		return
 	}
 	if b.Challenge != "" {
-		c.JSON(200, gin.H{
+		c.JSON(http.StatusOK, gin.H{
 			"challenge": b.Challenge,
 		})
+		return
+	}
+	if b.Event == nil {
+		c.Status(400)
 		return
 	}
 
