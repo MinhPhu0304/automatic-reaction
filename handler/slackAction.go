@@ -70,7 +70,7 @@ func reactToMessage(e SlackEventType) error {
 		return errors.Wrap(err, "Failed to marshal")
 	}
 	responseBody := bytes.NewBuffer(postBody)
-	resp, err := http.Post("https://slack.com/api/reactions.add", "application/json", responseBody)
+	resp, err := http.Post("https://slack.com/api/reactions.add", "application/json; charset=utf-8", responseBody)
 	if err != nil {
 		return errors.Wrap(err, "Failed to send request")
 	}
