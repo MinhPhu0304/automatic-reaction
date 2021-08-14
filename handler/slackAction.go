@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 
@@ -43,7 +42,7 @@ func ReactionBot(c *gin.Context) {
 		c.Status(400)
 		return
 	}
-	if b.Event.User == "ULJNGUBS8" {
+	if b.Event.User == os.Getenv("USER_SLACK_ID") {
 		if err := reactToMessage(*b.Event); err != nil {
 			if hub := sentrygin.GetHubFromContext(c); hub != nil {
 				hub.CaptureException(err)
@@ -59,14 +58,18 @@ type SlackReactionBody struct {
 	Timestamp string `json:"timestamp"`
 }
 
+type SlackReactionResponse struct {
+	Error string `json:"error"`
+	Ok    bool   `json:"ok"`
+}
+
 func reactToMessage(e SlackEventType) error {
 	postBody, err := json.Marshal(&SlackReactionBody{
 		Token:     os.Getenv("SLACK_BOT_TOKEN"),
 		Channel:   os.Getenv("CHANNEL_ID"),
-		Name:      "fire",
+		Name:      os.Getenv("EMOJI_NAME"),
 		Timestamp: e.EventTime,
 	})
-	log.Println(os.Getenv("SLACK_BOT_TOKEN"))
 	if err != nil {
 		return errors.Wrap(err, "Failed to marshal")
 	}
@@ -74,7 +77,7 @@ func reactToMessage(e SlackEventType) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to post reaction to slack")
 	}
-	// set headers
+
 	req.Header.Add("Authorization", "Bearer "+os.Getenv("SLACK_BOT_TOKEN"))
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Content-Type", "application/json; charset=UTF-8")
@@ -93,8 +96,13 @@ func reactToMessage(e SlackEventType) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to read response body")
 	}
-	dst := &bytes.Buffer{}
-	json.Indent(dst, body, "", "  ")
-	log.Println(dst.String())
+	var result *SlackReactionResponse
+	err = json.Unmarshal(body, result)
+	if err != nil {
+		return errors.Wrap(err, "Failed to decode json response")
+	}
+	if !result.Ok {
+		return errors.New("Error from slack with content: " + result.Error)
+	}
 	return nil
 }
