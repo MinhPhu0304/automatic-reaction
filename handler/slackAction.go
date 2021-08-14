@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
@@ -73,10 +74,17 @@ func reactToMessage(e SlackEventType) error {
 	if err != nil {
 		return errors.Wrap(err, "Failed to send request")
 	}
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("Unexpected status")
+	}
+
 	defer resp.Body.Close()
-	_, err = ioutil.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read response body")
 	}
+	dst := &bytes.Buffer{}
+	json.Indent(dst, body, "", "  ")
+	log.Println(dst.String())
 	return nil
 }
