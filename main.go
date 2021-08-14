@@ -34,5 +34,6 @@ func main() {
 	router.POST("/reaction-bot", handler.ReactionBot)
 
 	router.Run(":" + port)
+	log.Println("Application is ready")
 	defer sentry.Flush(2 * time.Second)
 }
