@@ -77,6 +77,8 @@ func reactToMessage(e SlackEventType) error {
 	// set headers
 	req.Header.Add("Authorization", "Bearer "+os.Getenv("SLACK_BOT_TOKEN"))
 	req.Header.Add("Accept", "application/json")
+	req.Header.Add("Content-Type", "application/json; charset=UTF-8")
+
 	client := &http.Client{}
 	response, err := client.Do(req)
 	if err != nil {
