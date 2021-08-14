@@ -66,20 +66,28 @@ func reactToMessage(e SlackEventType) error {
 		Name:      "fire",
 		Timestamp: e.EventTime,
 	})
+	log.Println(os.Getenv("SLACK_BOT_TOKEN"))
 	if err != nil {
 		return errors.Wrap(err, "Failed to marshal")
 	}
-	responseBody := bytes.NewBuffer(postBody)
-	resp, err := http.Post("https://slack.com/api/reactions.add", "application/json; charset=utf-8", responseBody)
+	req, err := http.NewRequest("POST", "https://slack.com/api/reactions.add", bytes.NewBuffer(postBody))
+	if err != nil {
+		return errors.Wrap(err, "Failed to post reaction to slack")
+	}
+	// set headers
+	req.Header.Add("Authorization", "Bearer "+os.Getenv("SLACK_BOT_TOKEN"))
+	req.Header.Add("Accept", "application/json")
+	client := &http.Client{}
+	response, err := client.Do(req)
 	if err != nil {
 		return errors.Wrap(err, "Failed to send request")
 	}
-	if resp.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusOK {
 		return errors.New("Unexpected status")
 	}
 
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		return errors.Wrap(err, "Failed to read response body")
 	}
