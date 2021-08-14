@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/getsentry/sentry-go"
 	sentrygin "github.com/getsentry/sentry-go/gin"
@@ -33,4 +34,5 @@ func main() {
 	router.POST("/reaction-bot", handler.ReactionBot)
 
 	router.Run(":" + port)
+	defer sentry.Flush(2 * time.Second)
 }
